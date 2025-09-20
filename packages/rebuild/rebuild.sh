@@ -79,6 +79,8 @@ fi
 
 if [[ -d ./nixos-core ]]; then
     override_inputs=(--override-input nixos-core path:./nixos-core)
+elif [[ -d ./core ]]; then
+    override_inputs=(--override-input nixos-core path:./core)
 fi
 
 if $update; then
