@@ -1,0 +1,83 @@
+# https://github.com/chapa/tide/tree/8faea68e01dd4cee5e60e5875af772ec5b7db1af (https://github.com/IlanCosman/tide/pull/500)
+--- a/functions/_tide_item_status.fish
++++ b/functions/_tide_item_status.fish
+@@ -1,7 +1,7 @@
+ function _tide_item_status
+     if string match -qv 0 $_tide_pipestatus # If there is a failure anywhere in the pipestatus
+         if test "$_tide_pipestatus" = 1 # If simple failure
+-            contains character $_tide_left_items || tide_status_bg_color=$tide_status_bg_color_failure \
++            test "$tide_status_display" = 0 && contains character $_tide_left_items || tide_status_bg_color=$tide_status_bg_color_failure \
+                 tide_status_color=$tide_status_color_failure _tide_print_item status $tide_status_icon_failure' ' 1
+         else
+             fish_status_to_signal $_tide_pipestatus | string replace SIG '' | string join '|' | read -l out
+@@ -9,7 +9,7 @@
+                 tide_status_bg_color=$tide_status_bg_color_failure tide_status_color=$tide_status_color_failure \
+                     _tide_print_item status $tide_status_icon_failure' ' $out
+         end
+-    else if not contains character $_tide_left_items
++    else if test "$tide_status_display" = 2 || not contains character $_tide_left_items
+         _tide_print_item status $tide_status_icon
+     end
+ end
+--- a/functions/tide/configure/configs/classic.fish
++++ b/functions/tide/configure/configs/classic.fish
+@@ -99,6 +99,7 @@
+ tide_status_bg_color_failure 444444
+ tide_status_color $_tide_color_dark_green
+ tide_status_color_failure D70000
++tide_status_display 0
+ tide_terraform_bg_color 444444
+ tide_terraform_color 844FBA
+ tide_time_bg_color 444444
+--- a/functions/tide/configure/configs/lean.fish
++++ b/functions/tide/configure/configs/lean.fish
+@@ -99,6 +99,7 @@
+ tide_status_bg_color_failure normal
+ tide_status_color $_tide_color_dark_green
+ tide_status_color_failure D70000
++tide_status_display 0
+ tide_terraform_bg_color normal
+ tide_terraform_color 844FBA
+ tide_time_bg_color normal
+--- a/functions/tide/configure/configs/rainbow.fish
++++ b/functions/tide/configure/configs/rainbow.fish
+@@ -99,6 +99,7 @@
+ tide_status_bg_color_failure CC0000
+ tide_status_color 4E9A06
+ tide_status_color_failure FFFF00
++tide_status_display 0
+ tide_terraform_bg_color 800080
+ tide_terraform_color 000000
+ tide_time_bg_color D3D7CF
+--- a/tests/_tide_item_status.test.fish
++++ b/tests/_tide_item_status.test.fish
+@@ -9,6 +9,7 @@
+ 
+ set -lx tide_status_icon ✔
+ set -lx tide_status_icon_failure ✘
++set -lx tide_status_display 0
+ 
+ # Without character
+ set -lx _tide_left_items
+@@ -58,3 +59,21 @@
+ 
+ not false | true
+ _status # CHECK: ✘ 1|0
++
++# With display option to 1
++set -lx tide_status_display 1
++
++true
++_status # CHECK:
++
++false
++_status # CHECK: ✘ 1
++
++# With display option to 2
++set -lx tide_status_display 2
++
++true
++_status # CHECK: ✔
++
++false
++_status # CHECK: ✘ 1

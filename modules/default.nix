@@ -4,4 +4,6 @@
         (file: lib.strings.hasSuffix ".nix" file && file != ./default.nix)
         (lib.filesystem.listFilesRecursive ./.)
     );
+
+    config.nixpkgs.overlays = [(import ../packages)];
 }
