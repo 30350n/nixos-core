@@ -8,7 +8,10 @@
         self,
         nixpkgs,
         nixpkgs-unstable,
-    } @ flake-inputs: {
+    } @ flake-inputs: let
+        system = "x86_64-linux";
+        pkgs = nixpkgs.legacyPackages.${system};
+    in {
         nixosModules.default = self.nixosModules.nixos-core;
         nixosModules.nixos-core = import ./modules;
 
@@ -16,5 +19,7 @@
         overlays.unfree = import ./overlays/unfree.nix {inherit flake-inputs;};
         overlays.unfree-unstable = import ./overlays/unfree-unstable.nix {inherit flake-inputs;};
         overlays.unstable = import ./overlays/unstable.nix {inherit flake-inputs;};
+
+        packages.${system}.install = pkgs.callPackage ./install {};
     };
 }

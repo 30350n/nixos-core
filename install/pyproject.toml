@@ -1,0 +1,10 @@
+[project]
+name = "install"
+version = "1.0"
+dependencies = ["cutie", "error-helper"]
+
+[project.scripts]
+install = "install:main"
+
+[tool.ruff]
+line-length = 100
