@@ -1,4 +1,5 @@
 {
+    alejandra,
     fetchPypi,
     python3Packages,
     writeText,
@@ -14,6 +15,8 @@ python3Packages.buildPythonApplication {
     postInstall = ''
         wrapPythonPrograms $out/bin
     '';
+
+    propagatedBuildInputs = [alejandra];
 
     dependencies = [
         (python3Packages.buildPythonPackage rec {

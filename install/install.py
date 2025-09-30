@@ -41,10 +41,18 @@ def install(config_url: str, dry_run=False):
         host = hosts[select(hosts, **SELECT_KWARGS)]
         print()
 
+    hardware_config_nix = TEMP_CONFIG_HOSTS_PATH / host / "hardware-configuration.nix"
+    if not hardware_config_nix.is_file():
+        info(f"Generating '{hardware_config_nix.name}' for host '{host}' ...")
+        hardware_config = run("nixos-generate-config --show-hardware-config", capture=True).stdout
+        hardware_config = CLEANUP_HARDWARE_CONFIG_REGEX.sub("", hardware_config)
+        hardware_config: str = run("alejandra", input=hardware_config, capture=True).stdout
+        hardware_config_nix.write_text(hardware_config)
+
     disko_nix = TEMP_CONFIG_HOSTS_PATH / host / "disko.nix"
-    disko_parsed = run(["nix-instantiate", "--parse", str(disko_nix)], stdout=True)
+    disko_parsed = run(["nix-instantiate", "--parse", str(disko_nix)], capture=True)
     required_devices = [
-        match.group(1) for match in DISKO_DEVICES_REGEX.finditer(disko_parsed.stdout.decode())
+        match.group(1) for match in DISKO_DEVICES_REGEX.finditer(disko_parsed.stdout)
     ]
     if not required_devices:
         return error(
@@ -57,7 +65,7 @@ def install(config_url: str, dry_run=False):
     )
 
     block_devices: list[str] = (
-        run("lsblk -I 8,259 -nd -o NAME", stdout=True).stdout.decode().strip().split()
+        run("lsblk -I 8,259 -nd -o NAME", capture=True).stdout.strip().split()
     )
     if len(required_devices) > len(block_devices):
         return error(
@@ -67,11 +75,11 @@ def install(config_url: str, dry_run=False):
 
     available_devices: list[tuple[str, str]] = []
     for blk_device in block_devices:
-        udevadm_info = run(["udevadm", "info", "-q", "symlink", "--name", blk_device], stdout=True)
+        udevadm_info = run(["udevadm", "info", "-q", "symlink", "--name", blk_device], capture=True)
         symlinks = sorted(
             (
                 link
-                for link in udevadm_info.stdout.decode().strip().split()
+                for link in udevadm_info.stdout.strip().split()
                 if link.startswith("disk/by-id/") and not link.startswith("disk/by-id/nvme-eui.")
             )
         )
@@ -105,10 +113,10 @@ def install(config_url: str, dry_run=False):
 
     host_id_file = TEMP_CONFIG_HOSTS_PATH / host / "host-id.nix"
     serial_numbers = [
-        run(["lsblk", "-nd", "-o", "serial", f"/dev/{blk_device}"], stdout=True).stdout
+        run(["lsblk", "-nd", "-o", "serial", f"/dev/{blk_device}"], capture=True).stdout
         for blk_device, _ in devices.values()
     ]
-    host_id = md5(b"".join(serial_numbers)).hexdigest()[:8]
+    host_id = md5("".join(serial_numbers).encode()).hexdigest()[:8]
     host_id_file.write_text(f'"{host_id}"\n')
 
     run(["chattr", "+i", str(devices_file), str(host_id_file)], dry=dry_run)
@@ -142,8 +150,8 @@ def install(config_url: str, dry_run=False):
             error("passwords do not match", prefix="", end="\n\n")
 
         if not dry_run:
-            hashed_password = run(["mkpasswd", password], stdout=True).stdout.strip()
-            (INSTALL_PASSWORDS_PATH / user).write_bytes(hashed_password)
+            hashed_password = run(["mkpasswd", password], capture=True).stdout.strip()
+            (INSTALL_PASSWORDS_PATH / user).write_text(hashed_password)
         print()
 
     success("Successfully installed NixOS!", prefix="")
@@ -151,9 +159,11 @@ def install(config_url: str, dry_run=False):
 
 
 DISKO_DEVICES_REGEX = re.compile(r"device\s+=\s+\(devices\)\.(\w+)")
+CLEANUP_HARDWARE_CONFIG_REGEX = re.compile(
+    r"#.*|fileSystems\.[^=]*=\s*{[^}]*};|swapDevices\s*=\s*\[[^]]*];"
+)
 
 SELECT_KWARGS: dict[str, Any] = dict(deselected_prefix="  ", selected_prefix="> ")
-SILENT: dict[str, Any] = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 DISKO_FORMAT = [
     "nix",
@@ -172,17 +182,19 @@ NIXOS_INSTALL = ["nixos-install", "--no-root-passwd", "--root", str(INSTALL_PATH
 
 def run(
     command: str | list[str],
+    *,
     cwd=TEMP_CONFIG_PATH,
+    input=None,
     check=True,
     silent=False,
-    stdout=False,
+    capture=False,
     dry=False,
 ) -> subprocess.CompletedProcess[Any]:
     if isinstance(command, str):
         command = command.split()
 
     if dry:
-        assert not stdout
+        assert not capture
         command = " ".join(command)
         info(f"[dry] would run '{command}' in '{cwd}'")
         return cast(subprocess.CompletedProcess, object())
@@ -190,10 +202,15 @@ def run(
     return subprocess.run(
         command,
         cwd=cwd,
+        input=input,
         check=check,
-        capture_output=stdout,
-        **(SILENT if silent and not stdout else {}),
+        capture_output=capture,
+        text=True,
+        **(SILENT if silent and not capture else {}),
     )
+
+
+SILENT: dict[str, Any] = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def main():
