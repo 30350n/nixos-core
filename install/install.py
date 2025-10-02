@@ -7,8 +7,8 @@ from hashlib import md5
 from pathlib import Path
 from typing import Any, cast
 
-from cutie import prompt_yes_or_no, select
-from error_helper import error, hint, info, prompt, success, warning
+from cutie import prompt_yes_or_no, select, select_multiple
+from error_helper import error, hint, info, prompt, prompt_input, success, warning
 
 INSTALL_PATH = Path("/mnt")
 INSTALL_CONFIG_PATH = INSTALL_PATH / "persist" / "etc" / "nixos"
@@ -132,13 +132,17 @@ def install(config_url: str, dry_run=False):
     run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{host}"], silent=True, dry=dry_run)
     print()
 
-    info("Setup user passwords to complete installation")
-    INSTALL_PASSWORDS_PATH.mkdir(parents=True)
-    passwd = (Path("/") if dry_run else INSTALL_PATH) / "etc" / "passwd"
-    for user, *_, login_shell in map(lambda line: line.split(":"), passwd.read_text().splitlines()):
-        if login_shell.endswith("bin/nologin"):
-            continue
+    passwd = ((Path("/") if dry_run else INSTALL_PATH) / "etc" / "passwd").read_text()
+    users_dict = {
+        user: int(id)
+        for user, _, id, *_, login_shell in map(lambda line: line.split(":"), passwd.splitlines())
+        if not login_shell.endswith("/bin/nologin")
+    }
+    users, user_ids = cast(tuple[list[str], list[int]], tuple(zip(*users_dict.items())))
 
+    info("Setup user passwords")
+    INSTALL_PASSWORDS_PATH.mkdir(parents=True)
+    for user in users:
         while True:
             password = getpass(f"password for {user}: ")
             retyped = getpass(f"retype password for {user}: ")
@@ -150,6 +154,25 @@ def install(config_url: str, dry_run=False):
         (INSTALL_PASSWORDS_PATH / user).write_text(hashed_password)
         print()
 
+    info("Add authorized ssh key")
+    prompt("select users to add authorized ssh key to")
+    selected_users = select_multiple(users, **SELECT_MULTIPLE_KWARGS)
+    print()
+
+    if selected_users:
+        while not (ssh_key := prompt_input("ssh \033[1mpublic\033[0m key").strip()):
+            pass
+        (home := INSTALL_PATH / "home").mkdir(mode=0o755)
+        for user, user_id in map(lambda i: (users[i], user_ids[i]), selected_users):
+            (user_home := INSTALL_PATH / "root" if user_id == 0 else home / user).mkdir(mode=0o700)
+            (ssh_dir := user_home / ".ssh").mkdir(mode=0o700)
+            authorized_keys = ssh_dir / "authorized_keys"
+            authorized_keys.write_text(f"{ssh_key}\n")
+            authorized_keys.chmod(mode=0o600)
+
+            for path in [authorized_keys, ssh_dir, user_home]:
+                shutil.chown(path, user_id)
+
     success("Successfully installed NixOS!", prefix="")
     hint("reboot now to finish installation")
 
@@ -160,6 +183,12 @@ CLEANUP_HARDWARE_CONFIG_REGEX = re.compile(
 )
 
 SELECT_KWARGS: dict[str, Any] = dict(deselected_prefix="  ", selected_prefix="> ")
+SELECT_MULTIPLE_KWARGS: dict[str, Any] = dict(
+    deselected_unticked_prefix="  [ ] ",
+    deselected_ticked_prefix="  [x] ",
+    selected_unticked_prefix="> [ ] ",
+    selected_ticked_prefix="> [x] ",
+)
 
 DISKO_FORMAT = [
     "nix",
