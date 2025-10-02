@@ -45,7 +45,7 @@ def install(config_url: str, dry_run=False):
     if not hardware_config_nix.is_file():
         info(f"Generating '{hardware_config_nix.name}' for host '{host}' ...")
         hardware_config = run("nixos-generate-config --show-hardware-config", capture=True).stdout
-        hardware_config = CLEANUP_HARDWARE_CONFIG_REGEX.sub("", hardware_config)
+        # hardware_config = CLEANUP_HARDWARE_CONFIG_REGEX.sub("", hardware_config)
         hardware_config: str = run("alejandra", input=hardware_config, capture=True).stdout
         hardware_config_nix.write_text(hardware_config)
 
