@@ -26,7 +26,7 @@ def install(config_url: str, dry_run=False):
     shutil.rmtree(TEMP_CONFIG_PATH, ignore_errors=True)
     TEMP_CONFIG_PATH.mkdir(parents=True)
     run(["git", "clone", config_url, str(TEMP_CONFIG_PATH)])
-    run("jj git init --colocate", silent=True)
+    run(["jj", "git", "init", "--colocate", str(TEMP_CONFIG_PATH)], silent=True)
     print()
 
     if not (hosts := [host_dir.name for host_dir in TEMP_CONFIG_HOSTS_PATH.glob("*/")]):
@@ -124,10 +124,8 @@ def install(config_url: str, dry_run=False):
     if INSTALL_PATH.exists() and (not INSTALL_PATH.is_dir() or any(INSTALL_PATH.glob("*"))):
         return error(f"{INSTALL_PATH} exists and is not an empty directory")
 
-    if not dry_run:
-        INSTALL_CONFIG_PATH.parent.mkdir(parents=True)
-        shutil.move(TEMP_CONFIG_PATH, INSTALL_CONFIG_PATH)
-    shutil.rmtree(TEMP_CONFIG_PATH)
+    INSTALL_CONFIG_PATH.parent.mkdir(parents=True)
+    shutil.move(TEMP_CONFIG_PATH, INSTALL_CONFIG_PATH)
     print()
 
     info("Installing NixOS ...")
@@ -135,8 +133,7 @@ def install(config_url: str, dry_run=False):
     print()
 
     info("Setup user passwords to complete installation")
-    if not dry_run:
-        INSTALL_PASSWORDS_PATH.mkdir(parents=True)
+    INSTALL_PASSWORDS_PATH.mkdir(parents=True)
     passwd = (Path("/") if dry_run else INSTALL_PATH) / "etc" / "passwd"
     for user, *_, login_shell in map(lambda line: line.split(":"), passwd.read_text().splitlines()):
         if login_shell.endswith("bin/nologin"):
@@ -149,9 +146,8 @@ def install(config_url: str, dry_run=False):
                 break
             error("passwords do not match", prefix="", end="\n\n")
 
-        if not dry_run:
-            hashed_password = run(["mkpasswd", password], capture=True).stdout.strip()
-            (INSTALL_PASSWORDS_PATH / user).write_text(hashed_password)
+        hashed_password = run(["mkpasswd", password], capture=True).stdout.strip()
+        (INSTALL_PASSWORDS_PATH / user).write_text(hashed_password)
         print()
 
     success("Successfully installed NixOS!", prefix="")
@@ -183,7 +179,6 @@ NIXOS_INSTALL = ["nixos-install", "--no-root-passwd", "--root", str(INSTALL_PATH
 def run(
     command: str | list[str],
     *,
-    cwd=TEMP_CONFIG_PATH,
     input=None,
     check=True,
     silent=False,
@@ -196,12 +191,11 @@ def run(
     if dry:
         assert not capture
         command = " ".join(command)
-        info(f"[dry] would run '{command}' in '{cwd}'")
+        info(f"[dry] would run '{command}'")
         return cast(subprocess.CompletedProcess, object())
 
     return subprocess.run(
         command,
-        cwd=cwd,
         input=input,
         check=check,
         capture_output=capture,
