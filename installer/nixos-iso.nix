@@ -10,7 +10,12 @@
 
     networking.hostName = "nixos-iso";
 
-    services.openssh.enable = true;
+    services.openssh = {
+        enable = true;
+        extraConfig = ''
+            PermitEmptyPasswords yes
+        '';
+    };
 
     services.avahi = {
         enable = true;
