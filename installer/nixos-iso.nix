@@ -8,11 +8,13 @@
         ../modules
     ];
 
+    isoImage.edition = "core";
     networking.hostName = "nixos-iso";
 
     services.openssh = {
         enable = true;
         extraConfig = ''
+            UsePAM no
             PermitEmptyPasswords yes
         '';
     };
@@ -25,6 +27,7 @@
             addresses = true;
             domain = true;
             hinfo = true;
+            userServices = true;
             workstation = true;
         };
     };
