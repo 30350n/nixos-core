@@ -25,7 +25,7 @@ def install(config_url: str, dry_run=False):
     info("Cloning configuration ...")
     shutil.rmtree(TEMP_CONFIG_PATH, ignore_errors=True)
     TEMP_CONFIG_PATH.mkdir(parents=True)
-    run(["git", "clone", config_url, str(TEMP_CONFIG_PATH)])
+    run(["git", "clone", config_url, str(TEMP_CONFIG_PATH)], silent=True)
     run(["jj", "git", "init", "--colocate", str(TEMP_CONFIG_PATH)], silent=True)
     print()
 
@@ -131,7 +131,7 @@ def install(config_url: str, dry_run=False):
     run(["chattr", "+i", str(devices_file), str(host_id_file)], dry=dry_run)
 
     info("Installing NixOS ...")
-    run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{host}"], silent=True, dry=dry_run)
+    run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{host}"], dry=dry_run)
     print()
 
     passwd = ((Path("/") if dry_run else INSTALL_PATH) / "etc" / "passwd").read_text()
@@ -157,7 +157,7 @@ def install(config_url: str, dry_run=False):
         print()
 
     info("Add authorized ssh key")
-    prompt("select users to add authorized ssh key to")
+    prompt("select users to add authorized ssh key to", prefix="")
     selected_users = select_multiple(users, **SELECT_MULTIPLE_KWARGS)
     print()
 
