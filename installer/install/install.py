@@ -119,14 +119,16 @@ def install(config_url: str, dry_run=False):
     host_id = md5("".join(serial_numbers).encode()).hexdigest()[:8]
     host_id_file.write_text(f'"{host_id}"\n')
 
-    run(["chattr", "+i", str(devices_file), str(host_id_file)], dry=dry_run)
-
     if INSTALL_CONFIG_PATH.exists():
         return error(f"{INSTALL_CONFIG_PATH} exists")
 
     INSTALL_CONFIG_PATH.parent.mkdir(parents=True)
     shutil.move(TEMP_CONFIG_PATH, INSTALL_CONFIG_PATH)
     print()
+
+    devices_file = INSTALL_CONFIG_PATH / devices_file.relative_to(TEMP_CONFIG_PATH)
+    host_id_file = INSTALL_CONFIG_PATH / host_id_file.relative_to(TEMP_CONFIG_PATH)
+    run(["chattr", "+i", str(devices_file), str(host_id_file)], dry=dry_run)
 
     info("Installing NixOS ...")
     run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{host}"], silent=True, dry=dry_run)
