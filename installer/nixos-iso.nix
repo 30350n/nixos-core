@@ -11,13 +11,12 @@
     isoImage.edition = "core";
     networking.hostName = "nixos-iso";
 
+    users.users.nixos.password = "";
     services.openssh = {
         enable = true;
-        extraConfig = ''
-            UsePAM no
-            PermitEmptyPasswords yes
-        '';
+        settings.PermitEmptyPasswords = true;
     };
+    security.pam.services.sshd.allowNullPassword = true;
 
     services.avahi = {
         enable = true;
