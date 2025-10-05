@@ -63,7 +63,7 @@ $ sudo nix --experimental-features "nix-command flakes" run github:30350n/nixos-
 ### Using [custom nixos-core#nixos-iso image](installer/nixos-iso.nix)
 
 ```shell
-$ sudo install <config-url>
+$ sudo nixos-core-install <config-url>
 ```
 
 ## Building [custom nixos-core#nixos-iso image](installer/nixos-iso.nix)

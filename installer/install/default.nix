@@ -5,7 +5,7 @@
     writeText,
 }:
 python3Packages.buildPythonApplication {
-    pname = "install";
+    pname = "nixos-core-install";
     version = "1.0";
     pyproject = true;
     build-system = with python3Packages; [setuptools];
