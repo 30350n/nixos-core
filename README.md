@@ -57,13 +57,13 @@ For configurations to be installable via the [`nixos-core#install`](install) com
 ### Using [minimal ISO image](https://nixos.org/download/)
 
 ```shell
-$ nix --experimental-features "nix-command flakes" run github:30350n/nixos-core#install -- <config-url>
+$ sudo nix --experimental-features "nix-command flakes" run github:30350n/nixos-core#install -- <config-url>
 ```
 
 ### Using [custom nixos-core#nixos-iso image](installer/nixos-iso.nix)
 
 ```shell
-$ install <config-url>
+$ sudo install <config-url>
 ```
 
 ## Building [custom nixos-core#nixos-iso image](installer/nixos-iso.nix)
