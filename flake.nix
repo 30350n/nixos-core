@@ -17,11 +17,23 @@
 
         overlays.default = self.overlays.unfree-unstable;
         overlays.unfree = import ./overlays/unfree.nix {inherit flake-inputs;};
-        overlays.unfree-unstable = import ./overlays/unfree-unstable.nix {inherit flake-inputs;};
         overlays.unstable = import ./overlays/unstable.nix {inherit flake-inputs;};
+        overlays.unfree-unstable = import ./overlays/unfree-unstable.nix {inherit flake-inputs;};
 
-        packages.${system}.install = pkgs.callPackage ./install {
-            alejandra = pkgs.callPackage ./packages/alejandra.nix {};
+        packages.${system} = {
+            install = pkgs.callPackage ./installer/install {
+                alejandra = pkgs.callPackage ./packages/alejandra.nix {};
+            };
+            nixos-iso = self.nixosConfigurations.nixos-iso.config.system.build.isoImage;
+        };
+
+        nixosConfigurations.nixos-iso = nixpkgs.lib.nixosSystem {
+            inherit system;
+            specialArgs = {
+                inherit flake-inputs;
+                inherit (self.packages.${system}) install;
+            };
+            modules = [./installer/nixos-iso.nix];
         };
     };
 }
