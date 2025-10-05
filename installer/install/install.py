@@ -45,7 +45,7 @@ def install(config_url: str, dry_run=False):
     if not hardware_config_nix.is_file():
         info(f"Generating '{hardware_config_nix.name}' for host '{host}' ...")
         hardware_config = run("nixos-generate-config --show-hardware-config", capture=True).stdout
-        # hardware_config = CLEANUP_HARDWARE_CONFIG_REGEX.sub("", hardware_config)
+        hardware_config = CLEANUP_HARDWARE_CONFIG_REGEX.sub("", hardware_config)
         hardware_config: str = run("alejandra", input=hardware_config, capture=True).stdout
         hardware_config_nix.write_text(hardware_config)
 
@@ -107,7 +107,7 @@ def install(config_url: str, dry_run=False):
 
     devices_file = TEMP_CONFIG_HOSTS_PATH / host / "devices.nix"
     devices_file_content = (
-        f"{{\n{''.join((f'    {dev} = "/dev/{id}",\n' for dev, (_, id) in devices.items()))}}}\n"
+        f"{{\n{''.join((f'    {dev} = "/dev/{id}";\n' for dev, (_, id) in devices.items()))}}}\n"
     )
     devices_file.write_text(devices_file_content)
 
@@ -121,8 +121,8 @@ def install(config_url: str, dry_run=False):
 
     run(["chattr", "+i", str(devices_file), str(host_id_file)], dry=dry_run)
 
-    if INSTALL_PATH.exists() and (not INSTALL_PATH.is_dir() or any(INSTALL_PATH.glob("*"))):
-        return error(f"{INSTALL_PATH} exists and is not an empty directory")
+    if INSTALL_CONFIG_PATH.exists():
+        return error(f"{INSTALL_CONFIG_PATH} exists")
 
     INSTALL_CONFIG_PATH.parent.mkdir(parents=True)
     shutil.move(TEMP_CONFIG_PATH, INSTALL_CONFIG_PATH)
@@ -178,9 +178,7 @@ def install(config_url: str, dry_run=False):
 
 
 DISKO_DEVICES_REGEX = re.compile(r"device\s+=\s+\(devices\)\.(\w+)")
-CLEANUP_HARDWARE_CONFIG_REGEX = re.compile(
-    r"#.*|fileSystems\.[^=]*=\s*{[^}]*};|swapDevices\s*=\s*\[[^]]*];"
-)
+CLEANUP_HARDWARE_CONFIG_REGEX = re.compile(r"#.*|fileSystems\.[^=]*=\s*{[^}]*};")
 
 SELECT_KWARGS: dict[str, Any] = dict(deselected_prefix="  ", selected_prefix="> ")
 SELECT_MULTIPLE_KWARGS: dict[str, Any] = dict(
