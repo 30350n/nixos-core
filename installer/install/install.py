@@ -101,9 +101,9 @@ def install(config_url: str, dry_run=False):
         return
     print()
 
-    devices_argstr = f"{{{', '.join((f'{dev}="/dev/{id}"' for dev, (_, id) in devices.items()))}}}"
+    devices_arg = f"{{ {' '.join((f'{dev} = "/dev/{id}";' for dev, (_, id) in devices.items()))} }}"
     info("Formatting devices with disko ...")
-    run([*DISKO_FORMAT, str(disko_nix), "--argstr", "devices", devices_argstr], dry=dry_run)
+    run([*DISKO_FORMAT, str(disko_nix), "--arg", "devices", devices_arg], dry=dry_run)
 
     devices_file = TEMP_CONFIG_HOSTS_PATH / host / "devices.nix"
     devices_file_content = (
