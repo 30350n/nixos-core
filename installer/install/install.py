@@ -103,7 +103,7 @@ def install(config_url: str, dry_run=False):
 
     devices_arg = f"{{ {' '.join((f'{dev} = "/dev/{id}";' for dev, (_, id) in devices.items()))} }}"
     info("Formatting devices with disko ...")
-    run([*DISKO_FORMAT, str(disko_nix), "--arg", "devices", devices_arg], dry=dry_run)
+    run([*DISKO_FORMAT, str(disko_nix), "--arg", "devices", devices_arg], silent=True, dry=dry_run)
 
     devices_file = TEMP_CONFIG_HOSTS_PATH / host / "devices.nix"
     devices_file_content = (
@@ -200,6 +200,7 @@ DISKO_FORMAT = [
     "--",
     "--mode",
     "destroy,format,mount",
+    "--yes-wipe-all-disks",
 ]
 
 NIXOS_INSTALL = ["nixos-install", "--no-root-passwd", "--root", str(INSTALL_PATH)]
