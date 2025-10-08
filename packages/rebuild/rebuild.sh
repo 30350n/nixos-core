@@ -146,7 +146,7 @@ generation_date=$(
 )
 generation_nixos_version=$(cat $NIX_SYSTEM/nixos-version)
 
-generation_prefix="Generation "
+generation_prefix="$(hostname) - Generation "
 commit_message=$(
     jj show --summary 2> /dev/null | grep -e "^    " -e '^$' | tail -n +2 | head -n -1 | cut -c 5- |
         grep -v "^$generation_prefix" | grep -v '^(no description set)$' || true
