@@ -42,4 +42,6 @@
         nix-output-monitor
         zoxide
     ];
+
+    documentation.nixos.enable = false;
 }
