@@ -28,6 +28,11 @@
         };
 
         nix-ld.enable = true;
+
+        zoxide = {
+            enable = true;
+            flags = ["--cmd cd"];
+        };
     };
 
     environment.systemPackages = with pkgs; [
@@ -40,7 +45,6 @@
         eza
         htop
         nix-output-monitor
-        zoxide
     ];
 
     documentation.nixos.enable = false;
