@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 help="\
 Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS]
 
@@ -69,10 +71,10 @@ while [[ $OPTIND -le $# ]]; do
     fi
 done
 
-pushd /etc/nixos &> /dev/null
+pushd /etc/nixos &> /dev/null || (error "'/etc/nixos' does not exist" && exit 1)
 
 if [[ $(id -u) != 0 ]]; then
-    popd &> /dev/null
+    popd &> /dev/null || true
     sudo rebuild || exit $?
     exit 0
 fi
@@ -135,7 +137,7 @@ nixos-rebuild $command --flake path:. "${override_inputs[@]}" --log-format inter
             SYSTEMD_COLORS=true journalctl --unit "$failed_service" | tail -n "+$line"
         fi
         hint "(check /etc/nixos/rebuild.log for the full build log)"
-        popd &> /dev/null
+        popd &> /dev/null || true
         exit 1
     }
 
@@ -156,4 +158,4 @@ echo -e "$commit_message\n\n$generation_prefix$generation" | jj describe --stdin
 
 success "Successfully built NixOS configuration!"
 hint "($generation_prefix$generation)"
-popd &> /dev/null
+popd &> /dev/null || true
