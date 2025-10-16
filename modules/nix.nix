@@ -1,4 +1,17 @@
 {flake-inputs, ...}: {
+    nix.gc = {
+        automatic = true;
+        persistent = true;
+        dates = "weekly 06:00";
+        options = "--delete-older-than 14d";
+    };
+
+    nix.optimise = {
+        automatic = true;
+        persistent = true;
+        dates = ["08:00"];
+    };
+
     nix.registry.unstable = {
         from = {
             type = "indirect";
