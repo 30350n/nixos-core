@@ -12,6 +12,8 @@
         system = "x86_64-linux";
         pkgs = nixpkgs.legacyPackages.${system};
     in {
+        lib = import ./lib.nix nixpkgs.lib;
+
         nixosModules.default = self.nixosModules.nixos-core;
         nixosModules.nixos-core = import ./modules;
 

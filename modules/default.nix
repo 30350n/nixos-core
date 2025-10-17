@@ -4,11 +4,8 @@
     pkgs,
     ...
 }: {
-    imports = (
-        lib.filter
-        (file: lib.strings.hasSuffix ".nix" file && file != ./default.nix)
-        (lib.filesystem.listFilesRecursive ./.)
-    );
+    imports =
+        (lib.nixos-core or (import ../lib.nix lib).nixos-core).autoImport ./.;
 
     options.nixos-core = {
         allowUnfree = lib.mkOption {
