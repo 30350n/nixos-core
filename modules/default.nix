@@ -29,6 +29,8 @@
             nix-output-monitor
         ];
 
+        environment.variables.PAGER = "less -FrX";
+
         nixpkgs.overlays = [(import ../packages)];
         nixpkgs.config.allowUnfreePredicate = package:
             builtins.elem (lib.getName package) config.nixos-core.allowUnfree;
