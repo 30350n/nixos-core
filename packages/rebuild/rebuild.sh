@@ -4,8 +4,9 @@ help="\
 Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS]
 
 Options:
-  -u, --update Update the flake before rebuilding.
-  -h, --help   Show this message and exit.
+  -d, --dry     Rebuild configuration without activating it.
+  -u, --update  Update the flake before rebuilding.
+  -h, --help    Show this message and exit.
 "
 
 info() {
@@ -37,7 +38,7 @@ while [[ $OPTIND -le $# ]]; do
     if getopts ":-:" OPTCHAR; then
         if [[ $OPTCHAR == "-" ]]; then
             case "$OPTARG" in
-                test)
+                dry)
                     command="dry-activate"
                     ;;
                 update)
@@ -53,7 +54,7 @@ while [[ $OPTIND -le $# ]]; do
             esac
         else
             case "$OPTARG" in
-                t)
+                d)
                     command="dry-activate"
                     ;;
                 u)
