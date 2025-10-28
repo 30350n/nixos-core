@@ -12,6 +12,10 @@
             type = lib.types.listOf lib.types.str;
             default = [];
         };
+        normalUserGroups = lib.mkOption {
+            type = lib.types.listOf lib.types.str;
+            default = [];
+        };
     };
 
     config = {
@@ -75,5 +79,14 @@
             Defaults lecture = never
             Defaults env_keep += "EDITOR"
         '';
+
+        users.groups = let
+            normalUsers = map (user: user.name) (
+                builtins.filter (user: user.isNormalUser) (builtins.attrValues config.users.users)
+            );
+        in
+            lib.mkMerge (
+                map (group: {${group}.members = normalUsers;}) config.nixos-core.normalUserGroups
+            );
     };
 }
