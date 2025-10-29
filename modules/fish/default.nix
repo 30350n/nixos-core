@@ -9,7 +9,7 @@
         loginShell = {
             enable = lib.mkEnableOption "loginShell" // {default = true;};
             skipParents = lib.mkOption {
-                type = lib.types.listOf lib.types.string;
+                type = lib.types.listOf lib.types.str;
                 default = [];
             };
         };
