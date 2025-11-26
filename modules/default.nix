@@ -1,11 +1,12 @@
-{
+{nix-index-database, ...}: {
     config,
     lib,
     pkgs,
     ...
 }: {
     imports =
-        (lib.nixos-core or (import ../lib.nix lib).nixos-core).autoImport ./.;
+        [nix-index-database.nixosModules.nix-index]
+        ++ (lib.nixos-core or (import ../lib.nix lib).nixos-core).autoImport ./.;
 
     options.nixos-core = {
         allowUnfree = lib.mkOption {
@@ -49,8 +50,6 @@
                 fi
             '';
 
-            command-not-found.enable = false;
-
             git = {
                 enable = true;
                 lfs.enable = true;
@@ -66,6 +65,8 @@
                     set whitespace "→·"
                 '';
             };
+
+            nix-index-database.comma.enable = true;
 
             nix-ld.enable = true;
 
