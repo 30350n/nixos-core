@@ -32,6 +32,8 @@
             eza
             htop
             nix-output-monitor
+            unzip
+            zip
         ];
 
         environment.variables.PAGER = "less -FrX";
