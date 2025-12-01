@@ -29,38 +29,41 @@ def install(config_url: str, dry_run=False):
     run(["jj", "git", "init", "--colocate", str(TEMP_CONFIG_PATH)], silent=True)
     print()
 
-    if not (hosts := [host_dir.name for host_dir in TEMP_CONFIG_HOSTS_PATH.glob("*/")]):
-        return error(f"failed to find host configurations in {TEMP_CONFIG_HOSTS_PATH}")
-
-    if len(hosts) == 1:
-        host = hosts[0]
-        info(f"Auto-selected host configuration '{host}'")
+    if host_dirs := [host_dir for host_dir in TEMP_CONFIG_HOSTS_PATH.glob("*/")]:
+        if len(host_dirs) == 1:
+            host_dir = host_dirs[0]
+            info(f"Auto-selected host configuration '{host_dir.name}'")
+        else:
+            info("Detected multiple host configurations")
+            prompt("select the host configuration you want to install", prefix="")
+            host_dir = host_dirs[select([host_dir.name for host_dir in host_dirs], **SELECT_KWARGS)]
+            print()
+        host_str = f"'{host_dir.name}' "
+    elif (host_dir := TEMP_CONFIG_PATH / "host").is_dir():
+        host_str = ""
     else:
-        info("Detected multiple host configurations")
-        prompt("select the host configuration you want to install", prefix="")
-        host = hosts[select(hosts, **SELECT_KWARGS)]
-        print()
+        return error(f"failed to find host configuration in {TEMP_CONFIG_PATH}")
 
-    hardware_config_nix = TEMP_CONFIG_HOSTS_PATH / host / "hardware-configuration.nix"
+    hardware_config_nix = host_dir / "hardware-configuration.nix"
     if not hardware_config_nix.is_file():
-        info(f"Generating '{hardware_config_nix.name}' for host '{host}' ...")
+        info(f"Generating '{hardware_config_nix.name}' for host {host_str}...")
         hardware_config = run("nixos-generate-config --show-hardware-config", capture=True).stdout
         hardware_config = CLEANUP_HARDWARE_CONFIG_REGEX.sub("", hardware_config)
         hardware_config: str = run("alejandra", input=hardware_config, capture=True).stdout
         hardware_config_nix.write_text(hardware_config)
 
-    disko_nix = TEMP_CONFIG_HOSTS_PATH / host / "disko.nix"
+    disko_nix = host_dir / "disko.nix"
     disko_parsed = run(["nix-instantiate", "--parse", str(disko_nix)], capture=True)
     required_devices = [
         match.group(1) for match in DISKO_DEVICES_REGEX.finditer(disko_parsed.stdout)
     ]
     if not required_devices:
         return error(
-            f"host configuration '{host}' does not specify any physical devices\n"
+            f"host configuration {host_str}does not specify any physical devices\n"
             f"(make sure '{disko_nix.relative_to(TEMP_CONFIG_PATH)}' has a 'devices' argument)"
         )
     info(
-        f"Host configuration '{host}' requires {len(required_devices)} physical "
+        f"Host configuration {host_str}requires {len(required_devices)} physical "
         f"device{'s' if len(required_devices) > 1 else ''} [{' '.join(required_devices)}]"
     )
 
@@ -69,8 +72,8 @@ def install(config_url: str, dry_run=False):
     )
     if len(required_devices) > len(block_devices):
         return error(
-            f"host configuration '{host}' requires {len(required_devices)} physical devices but "
-            f"only {len(block_devices)} are available"
+            f"host configuration {host_str}requires {len(required_devices)} physical "
+            f"devices but only {len(block_devices)} are available"
         )
 
     available_devices: list[tuple[str, str]] = []
@@ -105,13 +108,13 @@ def install(config_url: str, dry_run=False):
     info("Formatting devices with disko ...")
     run([*DISKO_FORMAT, str(disko_nix), "--arg", "devices", devices_arg], silent=True, dry=dry_run)
 
-    devices_file = TEMP_CONFIG_HOSTS_PATH / host / "devices.nix"
+    devices_file = host_dir / "devices.nix"
     devices_file_content = (
         f"{{\n{''.join((f'    {dev} = "/dev/{id}";\n' for dev, (_, id) in devices.items()))}}}\n"
     )
     devices_file.write_text(devices_file_content)
 
-    host_id_file = TEMP_CONFIG_HOSTS_PATH / host / "host-id.nix"
+    host_id_file = host_dir / "host-id.nix"
     serial_numbers = [
         run(["lsblk", "-nd", "-o", "serial", f"/dev/{blk_device}"], capture=True).stdout
         for blk_device, _ in devices.values()
@@ -131,7 +134,7 @@ def install(config_url: str, dry_run=False):
     run(["chattr", "+i", str(devices_file), str(host_id_file)], dry=dry_run)
 
     info("Installing NixOS ...")
-    run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{host}"], dry=dry_run)
+    run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{host_dir.name}"], dry=dry_run)
     print()
 
     passwd = ((Path("/") if dry_run else INSTALL_PATH) / "etc" / "passwd").read_text()
