@@ -39,8 +39,10 @@ def install(config_url: str, dry_run=False):
             host_dir = host_dirs[select([host_dir.name for host_dir in host_dirs], **SELECT_KWARGS)]
             print()
         host_str = f"'{host_dir.name}' "
+        nixos_config_name = host_dir.name
     elif (host_dir := TEMP_CONFIG_PATH / "host").is_dir():
         host_str = ""
+        nixos_config_name = "default"
     else:
         return error(f"failed to find host configuration in {TEMP_CONFIG_PATH}")
 
@@ -138,7 +140,7 @@ def install(config_url: str, dry_run=False):
     run(["chattr", "+i", str(devices_file), str(host_id_file)], dry=dry_run)
 
     info("Installing NixOS ...")
-    run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{host_dir.name}"], dry=dry_run)
+    run([*NIXOS_INSTALL, "--flake", f"path:{INSTALL_CONFIG_PATH}#{nixos_config_name}"], dry=dry_run)
     print()
 
     passwd = ((Path("/") if dry_run else INSTALL_PATH) / "etc" / "passwd").read_text()
