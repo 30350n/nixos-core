@@ -172,10 +172,13 @@ def install(config_url: str, dry_run=False):
     if selected_users:
         while not (ssh_key := prompt_input("ssh \033[1mpublic\033[0m key").strip()):
             pass
-        (home := INSTALL_PATH / "home").mkdir(mode=0o755)
+        home = INSTALL_PATH / "home"
+        home.mkdir(mode=0o755, exist_ok=True)
         for user, user_id in map(lambda i: (users[i], user_ids[i]), selected_users):
-            (user_home := INSTALL_PATH / "root" if user_id == 0 else home / user).mkdir(mode=0o700)
-            (ssh_dir := user_home / ".ssh").mkdir(mode=0o700)
+            user_home = INSTALL_PATH / "root" if user_id == 0 else home / user
+            user_home.mkdir(mode=0o700, exist_ok=True)
+            ssh_dir = user_home / ".ssh"
+            ssh_dir.mkdir(mode=0o700, exist_ok=True)
             authorized_keys = ssh_dir / "authorized_keys"
             authorized_keys.write_text(f"{ssh_key}\n")
             authorized_keys.chmod(mode=0o600)
