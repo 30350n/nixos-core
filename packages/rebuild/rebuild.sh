@@ -94,9 +94,11 @@ else
     nix flake update nixos-core
 fi
 
-info "Autoformatting NixOS configuration ..."
-pre-commit run --all-files &> /dev/null || true
-pre-commit run --all-files | (grep -v "Passed" || true)
+if [[ -f ".pre-commit-config.yaml" ]]; then
+    info "Autoformatting NixOS configuration ..."
+    pre-commit run --all-files &> /dev/null || true
+    pre-commit run --all-files | (grep -v "Passed" || true)
+fi
 
 echo
 info "Configuration changes:"
