@@ -104,6 +104,10 @@ def install(config_url: str, dry_run=False):
         return
     print()
 
+    info("Cleaning up /nix/store/ ...")
+    run("nix-collect-garbage --delete-old", silent=True, dry=dry_run)
+    print()
+
     devices_arg = f"{{ {' '.join((f'{dev} = "/dev/{id}";' for dev, (_, id) in devices.items()))} }}"
     info("Formatting devices with disko ...")
     run([*DISKO_FORMAT, str(disko_nix), "--arg", "devices", devices_arg], silent=True, dry=dry_run)
