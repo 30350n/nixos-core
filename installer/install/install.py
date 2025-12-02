@@ -175,7 +175,7 @@ def install(config_url: str, dry_run=False):
         home = INSTALL_PATH / "home"
         home.mkdir(mode=0o755, exist_ok=True)
         for user, user_id in map(lambda i: (users[i], user_ids[i]), selected_users):
-            user_home = INSTALL_PATH / "root" if user_id == 0 else home / user
+            user_home = INSTALL_PATH / "persist" / "root" if user_id == 0 else home / user
             user_home.mkdir(mode=0o700, exist_ok=True)
             ssh_dir = user_home / ".ssh"
             ssh_dir.mkdir(mode=0o700, exist_ok=True)
