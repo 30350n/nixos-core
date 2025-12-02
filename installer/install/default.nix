@@ -1,6 +1,8 @@
 {
     alejandra,
     fetchPypi,
+    git,
+    jujutsu,
     python3Packages,
     writeText,
 }:
@@ -16,7 +18,7 @@ python3Packages.buildPythonApplication {
         wrapPythonPrograms $out/bin
     '';
 
-    propagatedBuildInputs = [alejandra];
+    propagatedBuildInputs = [alejandra git jujutsu];
 
     dependencies = [
         (python3Packages.buildPythonPackage rec {
