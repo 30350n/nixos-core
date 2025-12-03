@@ -26,20 +26,11 @@ in {
         })
         (lib.mkIf self.desktopItem {
             environment.systemPackages = [
-                (
-                    pkgs.makeDesktopItem {
-                        name = "cockpit-desktop-item";
-                        desktopName = "Cockpit";
-                        icon = pkgs.fetchurl {
-                            url =
-                                "https://raw.githubusercontent.com/cockpit-project/cockpit/"
-                                + "d32340cd69824da5dd27549a4eed889d1d83b3c5/pkg/shell/images/"
-                                + "cockpit-icon.svg";
-                            sha256 = "phAGG4nPNVVKLk2DMlVnLz7iQkOaRobIutHqKhrHFzQ=";
-                        };
-                        exec = "${pkgs.chromium}/bin/chromium --app=http://localhost:9090";
-                    }
-                )
+                (pkgs.nixos-core.makeWebApp {
+                    url = "localhost:9090";
+                    name = "Cockpit";
+                    icon = "${pkgs.cockpit.src}/pkg/shell/images/cockpit-icon.svg";
+                })
             ];
         })
     ];

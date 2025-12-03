@@ -2,6 +2,8 @@ final: prev: rec {
     nixos-core = {
         configure = final.callPackage ./configure.nix {};
         rebuild = final.callPackage ./rebuild {inherit alejandra nix-output-monitor;};
+
+        makeWebApp = final.callPackage ./makeWebApp.nix {};
     };
 
     alejandra = final.callPackage ./alejandra.nix {inherit (prev) alejandra;};
