@@ -2,14 +2,12 @@
     nix.gc = {
         automatic = true;
         persistent = true;
-        dates = "Sat *-*-* 08:00";
         options = "--delete-older-than 14d";
     };
 
     nix.optimise = {
         automatic = true;
         persistent = true;
-        dates = ["09:00"];
     };
 
     nix.registry.unstable = {
