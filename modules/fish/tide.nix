@@ -77,7 +77,7 @@
 ''
 + ''
     function _tide_item_ssh
-        if not set -q SSH_TTY
+        if not set -q SSH_CONNECTION
             return 0
         end
 
