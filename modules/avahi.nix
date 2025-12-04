@@ -4,8 +4,8 @@
     ...
 }: {
     services.avahi = {
-        enable = true;
-        nssmdns4 = true;
+        enable = lib.mkDefault true;
+        nssmdns4 = lib.mkDefault true;
         publish = let
             publish = config.services.avahi.publish.enable;
         in {
