@@ -1,5 +1,5 @@
 ''
-    set tide_left_prompt_items pwd jj newline character
+    set tide_left_prompt_items ssh pwd jj newline character
     set tide_right_prompt_items cmd_duration status direnv docker nix_shell python rustc \
         sub_shell
 
@@ -50,6 +50,9 @@
     set tide_nix_shell_color cyan
     set tide_nix_shell_bg_color normal
 
+    set tide_ssh_icon "󰢹 " # nf-md-remote_desktop
+    set tide_ssh_color --bold brcyan
+
     set tide_status_display 2
     set tide_status_icon " " # nf-md-check_bold
     set tide_status_icon_failure " " # nf-fa-xmark
@@ -71,6 +74,15 @@
     set tide_rustc_icon  # nf-seti-rust
     set tide_rustc_color red
     set tide_rustc_bg_color normal
+''
++ ''
+    function _tide_item_ssh
+        if not set -q SSH_TTY
+            return 0
+        end
+
+        _tide_print_item ssh (set_color $tide_ssh_color)$tide_ssh_icon (hostname) (set_color normal)
+    end
 ''
 + (let
     jj_log = args: "jj log --no-graph --color=always -r @ -T ${args} 2> /dev/null";
