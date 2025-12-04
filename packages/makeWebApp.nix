@@ -12,7 +12,9 @@
 makeDesktopItem {
     exec = "${chromium}/bin/chromium --app=http://${url}";
     desktopName = name;
-    name = "chrome-${url}__-Default";
+    name = let
+        base_url = builtins.elemAt (builtins.match "([^:/]+://)?([^:/]+)(:[0-9]+)?(/.*)?" url) 1;
+    in "chrome-${base_url}__-Default";
     icon =
         if icon == null || icon-scale == null
         then icon
