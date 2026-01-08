@@ -45,7 +45,7 @@ For configurations to be installable via the [`nixos-core#install`](install) com
 
 ```shell
 <config-root>/
-├── hosts/<hostname>/
+├── hosts/<hostname>/               # or host/ for single host configurations
 │   ├── disko.nix
 │   ├── devices.nix                 # created by install script, should be imported by disko.nix
 │   └── hardware-configuration.nix  # created by install script
