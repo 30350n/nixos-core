@@ -57,9 +57,9 @@
         }
         (lib.mkIf config.nixos-core.fish.loginShell.enable {
             programs.bash.interactiveShellInit = let
-                skipParents =
-                    lib.strings.concatMapStringsSep " && " (cmd: "$_parent != \"${cmd}\"")
-                    (["fish"] ++ config.nixos-core.fish.loginShell.skipParents);
+                skipParents = lib.strings.concatMapStringsSep " && " (
+                    cmd: "$_parent != \"${cmd}\""
+                ) (["fish"] ++ config.nixos-core.fish.loginShell.skipParents);
             in ''
                 _parent=$(${pkgs.procps}/bin/ps --no-header --pid=$PPID --format=comm)
                 if [[ ${skipParents} && -z "$BASH_EXECUTION_STRING" ]]
