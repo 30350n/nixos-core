@@ -3,6 +3,11 @@
         nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
         nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
+        impermanence = {
+            url = "github:nix-community/impermanence";
+            inputs.nixpkgs.follows = "nixpkgs";
+        };
+
         nix-index-database = {
             url = "github:nix-community/nix-index-database";
             inputs.nixpkgs.follows = "nixpkgs";

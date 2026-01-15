@@ -1,11 +1,18 @@
-{nix-index-database, ...}: {
+{
+    impermanence,
+    nix-index-database,
+    ...
+}: {
     config,
     lib,
     pkgs,
     ...
 }: {
     imports =
-        [nix-index-database.nixosModules.nix-index]
+        [
+            impermanence.nixosModules.impermanence
+            nix-index-database.nixosModules.nix-index
+        ]
         ++ (lib.nixos-core or (import ../lib.nix lib).nixos-core).autoImport ./.;
 
     options.nixos-core = {
