@@ -8,11 +8,11 @@
         persistFileSystem = lib.mkOption {type = lib.types.str;};
         persist = {
             directories = lib.mkOption {
-                type = lib.types.listOf lib.types.str;
+                type = lib.types.listOf (lib.types.either lib.types.str lib.types.attrs);
                 default = [];
             };
             files = lib.mkOption {
-                type = lib.types.listOf lib.types.str;
+                type = lib.types.listOf (lib.types.either lib.types.str lib.types.attrs);
                 default = [];
             };
         };
