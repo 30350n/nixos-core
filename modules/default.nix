@@ -15,13 +15,19 @@
         ]
         ++ (lib.nixos-core or (import ../lib.nix lib).nixos-core).autoImport ./.;
 
-    options.nixos-core = {
-        allowUnfree = lib.mkOption {
-            type = lib.types.listOf lib.types.str;
-            default = [];
+    options.nixos-core = with lib; {
+        allowUnfree = {
+            predicates = mkOption {
+                type = types.listOf (types.functionTo types.bool);
+                default = [];
+            };
+            regexes = mkOption {
+                type = types.listOf types.str;
+                default = [];
+            };
         };
-        normalUserGroups = lib.mkOption {
-            type = lib.types.listOf lib.types.str;
+        normalUserGroups = mkOption {
+            type = types.listOf types.str;
             default = [];
         };
     };
@@ -46,8 +52,16 @@
         environment.variables.PAGER = "less -FrX";
 
         nixpkgs.overlays = [(import ../packages)];
+        nixos-core.allowUnfree.predicates = [
+            (
+                package:
+                    builtins.any (regex: (builtins.match regex (lib.getName package)) != null)
+                    config.nixos-core.allowUnfree.regexes
+            )
+        ];
         nixpkgs.config.allowUnfreePredicate = package:
-            builtins.elem (lib.getName package) config.nixos-core.allowUnfree;
+            builtins.any (predicate: predicate package)
+            config.nixos-core.allowUnfree.predicates;
 
         programs = {
             bash.promptInit = ''
