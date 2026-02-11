@@ -7,6 +7,11 @@ final: prev: rec {
     };
 
     alejandra = final.callPackage ./alejandra.nix {inherit (prev) alejandra;};
-    fishPlugins = prev.fishPlugins // {tide = import ./tide {inherit (prev.fishPlugins) tide;};};
+    fishPlugins =
+        prev.fishPlugins
+        // {
+            tide = import ./tide {inherit (prev.fishPlugins) tide;};
+            zoxide-fish = final.callPackage ./zoxide-fish.nix {};
+        };
     nix-output-monitor = import ./nix-output-monitor {inherit (prev) nix-output-monitor;};
 }
