@@ -1,0 +1,14 @@
+--- a/nixos_rebuild/__init__.py
++++ b/nixos_rebuild/__init__.py
+@@ -351,9 +351,10 @@ def main() -> None:
+     try:
+         execute(sys.argv)
+     except CalledProcessError as ex:
++        sys.exit(ex.returncode)
+         _handle_called_process_error(ex)
+     except (Exception, KeyboardInterrupt) as ex:
+-        if logger.isEnabledFor(logging.DEBUG):
++        if False:
+             raise
+         else:
+             sys.exit(str(ex))

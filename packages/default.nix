@@ -13,5 +13,6 @@ final: prev: rec {
             tide = import ./tide {inherit (prev.fishPlugins) tide;};
             zoxide-fish = final.callPackage ./zoxide-fish.nix {};
         };
+    nixos-rebuild-ng = import ./nixos-rebuild-ng {inherit (prev) nixos-rebuild-ng;};
     nix-output-monitor = import ./nix-output-monitor {inherit (prev) nix-output-monitor;};
 }
