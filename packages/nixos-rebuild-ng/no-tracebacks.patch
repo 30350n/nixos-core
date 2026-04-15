@@ -1,6 +1,6 @@
 --- a/nixos_rebuild/__init__.py
 +++ b/nixos_rebuild/__init__.py
-@@ -355,7 +355,7 @@ def main() -> None:
+@@ -355,14 +355,14 @@ def main() -> None:
      except CalledProcessError as ex:
          sys.exit(_handle_called_process_error(ex))
      except Exception as ex:
@@ -9,3 +9,11 @@
              raise
          else:
              sys.exit(str(ex))
+ 
+ 
+ def _handle_called_process_error(ex: CalledProcessError) -> int:
+-    if logger.isEnabledFor(logging.DEBUG):
++    if False:
+         sys.excepthook(*sys.exc_info())
+     else:
+         import shlex
