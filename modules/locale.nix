@@ -22,6 +22,7 @@
     services.xserver.xkb = lib.mkDefault {
         layout = "de";
         variant = "nodeadkeys";
+        model = "pc105";
     };
     console.useXkbConfig = lib.mkDefault true;
 }
