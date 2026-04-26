@@ -1,4 +1,8 @@
-{flake-inputs, ...}: {
+{
+    nixpkgs,
+    nixpkgs-unstable,
+    ...
+}: {
     nix.gc = {
         automatic = true;
         persistent = true;
@@ -15,12 +19,12 @@
             type = "indirect";
             id = "unstable";
         };
-        flake = flake-inputs.nixpkgs-unstable;
+        flake = nixpkgs-unstable;
     };
 
     nix.nixPath = [
-        "nixpkgs=${flake-inputs.nixpkgs.outPath}"
-        "unstable=${flake-inputs.nixpkgs-unstable.outPath}"
+        "nixpkgs=${nixpkgs.outPath}"
+        "unstable=${nixpkgs-unstable.outPath}"
     ];
 
     nix.settings.experimental-features = ["nix-command" "flakes"];

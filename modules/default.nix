@@ -2,7 +2,7 @@
     impermanence,
     nix-index-database,
     ...
-}: {
+} @ flake-inputs: {
     config,
     lib,
     pkgs,
@@ -12,8 +12,11 @@
         [
             impermanence.nixosModules.impermanence
             nix-index-database.nixosModules.nix-index
+            (import ./nix.nix flake-inputs)
         ]
-        ++ (lib.nixos-core or (import ../lib.nix lib).nixos-core).autoImport ./.;
+        ++ builtins.filter (path: path != ./nix.nix) (
+            (lib.nixos-core or (import ../lib.nix lib).nixos-core) .autoImport ./.
+        );
 
     options.nixos-core = with lib; {
         allowUnfree = {
