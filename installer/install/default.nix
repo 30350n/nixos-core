@@ -14,10 +14,6 @@ python3Packages.buildPythonApplication {
 
     src = ./.;
 
-    postInstall = ''
-        wrapPythonPrograms $out/bin
-    '';
-
     propagatedBuildInputs = [alejandra git jujutsu];
 
     dependencies = [

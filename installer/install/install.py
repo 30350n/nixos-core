@@ -102,7 +102,7 @@ def install(config_url: str, dry_run=False):
 
     blk_devices_str = " ".join((f"/dev/{blk_device}" for blk_device, _ in devices.values()))
     warning(f"ALL DATA ON {blk_devices_str} WILL BE ERASED.", prefix="WARNING: ")
-    if not prompt_yes_or_no("continue?", deselected_prefix="  ", selected_prefix="> "):
+    if not prompt_yes_or_no("continue?", **SELECT_KWARGS):
         return
     print()
 
