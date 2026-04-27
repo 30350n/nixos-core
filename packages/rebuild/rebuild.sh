@@ -4,9 +4,10 @@ help="\
 Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS]
 
 Options:
-  -d, --dry     Rebuild configuration without activating it.
-  -u, --update  Update the flake before rebuilding.
-  -h, --help    Show this message and exit.
+  -d, --dry            Rebuild configuration without activating it.
+  -u, --update         Update the flake before rebuilding.
+  -r, --remote <host>  Build configuration for remote host.
+  -h, --help           Show this message and exit.
 "
 
 info() {
@@ -30,9 +31,18 @@ unexpected_error() {
 }
 trap 'unexpected_error $LINENO $?' ERR
 
+check_option_value() {
+    if [[ -z ${1-} || $1 == -* ]]; then
+        echo "$help"
+        exit 1
+    fi
+}
+
 command="switch"
 update=false
-override_inputs=()
+config=""
+remote_host=""
+extra_args=()
 
 while [[ $OPTIND -le $# ]]; do
     if getopts ":-:" OPTCHAR; then
@@ -43,6 +53,11 @@ while [[ $OPTIND -le $# ]]; do
                     ;;
                 update)
                     update=true
+                    ;;
+                remote)
+                    check_option_value ${!OPTIND-}
+                    remote_host=${!OPTIND}
+                    ((OPTIND++))
                     ;;
                 help)
                     echo "$help"
@@ -60,6 +75,11 @@ while [[ $OPTIND -le $# ]]; do
                 u)
                     update=true
                     ;;
+                r)
+                    check_option_value ${!OPTIND-}
+                    remote_host=${!OPTIND}
+                    ((OPTIND++))
+                    ;;
                 h)
                     echo "$help"
                     exit 0
@@ -72,18 +92,24 @@ while [[ $OPTIND -le $# ]]; do
     fi
 done
 
-pushd /etc/nixos &> /dev/null || (error "'/etc/nixos' does not exist" && exit 1)
+if [[ -z $remote_host ]]; then
+    if [[ $(id -u) != 0 ]]; then
+        sudo rebuild || exit $?
+        exit 0
+    fi
 
-if [[ $(id -u) != 0 ]]; then
-    popd &> /dev/null || true
-    sudo rebuild || exit $?
-    exit 0
+    pushd /etc/nixos &> /dev/null || (error "'/etc/nixos' does not exist" && exit 1)
 fi
 
 if [[ -d ./nixos-core ]]; then
-    override_inputs=(--override-input nixos-core path:./nixos-core)
+    extra_args+=(--override-input nixos-core path:./nixos-core)
 elif [[ -d ./core ]]; then
-    override_inputs=(--override-input nixos-core path:./core)
+    extra_args+=(--override-input nixos-core path:./core)
+fi
+
+if [[ -n $remote_host ]]; then
+    extra_args+=(--target-host "root@$remote_host")
+    config="#${remote_host%%.*}"
 fi
 
 if $update; then
@@ -111,7 +137,7 @@ fi
 
 echo
 info "Building NixOS configuration ..."
-nixos-rebuild $command --flake path:. "${override_inputs[@]}" --log-format internal-json -v |&
+nixos-rebuild $command --flake "path:.${config}" "${extra_args[@]}" --log-format internal-json -v |&
     tee >(
         awk '
             BEGIN { cmd = "jq --unbuffered --raw-output '\''select(.action == \"msg\").msg'\''" }
@@ -139,19 +165,21 @@ nixos-rebuild $command --flake path:. "${override_inputs[@]}" --log-format inter
             )
             SYSTEMD_COLORS=true journalctl --unit "$failed_service" | tail -n "+$line"
         fi
-        hint "(check /etc/nixos/rebuild.log for the full build log)"
+        hint "(check $PWD/rebuild.log for the full build log)"
         popd &> /dev/null || true
         exit 1
     }
 
-NIX_SYSTEM="/nix/var/nix/profiles/system"
-generation_number=$(readlink "$NIX_SYSTEM" | awk -F "-" '{print $2}')
-generation_date=$(
-    stat --format %W "$(readlink -f $NIX_SYSTEM)" | jq -r 'strflocaltime("%Y-%m-%d %H:%M:%S")'
-)
-generation_nixos_version=$(cat $NIX_SYSTEM/nixos-version)
+[[ -z $remote_host ]] && run_on_target="" || run_on_target="ssh root@$remote_host"
 
-generation_prefix="$(hostname) - Generation "
+NIX_SYSTEM="/nix/var/nix/profiles/system"
+generation_number=$($run_on_target readlink "$NIX_SYSTEM" | awk -F "-" '{print $2}')
+generation_date=$(
+    $run_on_target stat --format %W -L $NIX_SYSTEM | jq -r 'strflocaltime("%Y-%m-%d %H:%M:%S")'
+)
+generation_nixos_version=$($run_on_target cat $NIX_SYSTEM/nixos-version)
+
+generation_prefix="$($run_on_target hostname) - Generation "
 commit_message=$(
     jj show --summary 2> /dev/null | grep -e "^    " -e '^$' | tail -n +2 | head -n -1 | cut -c 5- |
         grep -v "^$generation_prefix" | grep -v '^(no description set)$' || true
