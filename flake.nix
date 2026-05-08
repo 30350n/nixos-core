@@ -12,6 +12,11 @@
             url = "github:nix-community/nix-index-database";
             inputs.nixpkgs.follows = "nixpkgs";
         };
+
+        fast-nix-gc = {
+            url = "github:mic92/fast-nix-gc";
+            inputs.nixpkgs.follows = "nixpkgs";
+        };
     };
 
     outputs = {

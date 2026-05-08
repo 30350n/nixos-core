@@ -1,17 +1,22 @@
 {
+    fast-nix-gc,
     nixpkgs,
     nixpkgs-unstable,
     ...
 }: {
-    nix.gc = {
+    imports = [
+        fast-nix-gc.nixosModules.default
+    ];
+
+    services.fast-nix-gc = {
+        enable = true;
         automatic = true;
-        persistent = true;
-        options = "--delete-older-than 14d";
+        deleteOlderThan = "14d";
     };
 
-    nix.optimise = {
+    services.fast-nix-optimise = {
+        enable = true;
         automatic = true;
-        persistent = true;
     };
 
     nix.registry.unstable = {
