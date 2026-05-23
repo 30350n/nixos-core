@@ -153,6 +153,7 @@ nixos-rebuild $command --flake "path:.${config}" "${extra_args[@]}" --log-format
     ) |&
     nom --json ||
     {
+        error "Build failed with code $?"
         failed_service=$(
             grep "the following units failed: " rebuild.log |
                 grep -oP 'home-manager-[^ ]+\.service' || true
@@ -170,7 +171,12 @@ nixos-rebuild $command --flake "path:.${config}" "${extra_args[@]}" --log-format
         exit 1
     }
 
-[[ -z $remote_host ]] && run_on_target="" || run_on_target="ssh root@$remote_host"
+run_on_target=""
+if [[ -n $remote_host ]]; then
+    run_on_target="ssh root@$remote_host"
+    nix build ".#nixosConfigurations.${remote_host%%.*}.config.system.build.toplevel" \
+        --out-link "system-${remote_host%%.*}" &> /dev/null
+fi
 
 NIX_SYSTEM="/nix/var/nix/profiles/system"
 generation_number=$($run_on_target readlink "$NIX_SYSTEM" | awk -F "-" '{print $2}')
