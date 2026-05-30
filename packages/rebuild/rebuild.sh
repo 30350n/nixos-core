@@ -117,7 +117,7 @@ if $update; then
     nix flake update
 else
     info "Updating 'nixos-core' flake input ..."
-    nix flake update nixos-core
+    nix flake update nixos-core 2> /dev/null
 fi
 
 if [[ -f ".pre-commit-config.yaml" ]]; then
