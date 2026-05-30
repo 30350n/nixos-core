@@ -59,12 +59,26 @@
                 };
             }
             (lib.mkIf (cfg.resetCommands != null) {
-                boot.initrd.postResumeCommands = lib.mkAfter ''
-                    echo "resetting '${cfg.persistFileSystem}' file system" > /dev/kmsg
-                    {
-                        ${cfg.resetCommands}
-                    } > /dev/kmsg 2>&1
-                '';
+                boot.initrd.systemd = {
+                    enable = true;
+                    services.impermanence-reset-filesystem = {
+                        wantedBy = ["initrd.target"];
+                        before = ["sysroot.mount"];
+                        after = [
+                            "initrd-root-device.target"
+                            "zfs-import.target"
+                            "local-fs-pre.target"
+                        ];
+                        unitConfig.DefaultDependencies = false;
+                        serviceConfig.Type = "oneshot";
+                        script = ''
+                            echo "resetting '${cfg.persistFileSystem}' file system" > /dev/kmsg
+                            {
+                                ${cfg.resetCommands}
+                            } > /dev/kmsg 2>&1 || true
+                        '';
+                    };
+                };
             })
         ]);
 }

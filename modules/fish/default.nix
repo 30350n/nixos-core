@@ -50,7 +50,7 @@
                 '';
             };
 
-            documentation.man.generateCaches = false;
+            documentation.man.cache.enable = false;
 
             environment.systemPackages = with pkgs.fishPlugins; [bass tide zoxide-fish];
             environment.variables.SHELL = "${config.programs.fish.package}/bin/fish";
