@@ -10,7 +10,10 @@ final: prev: rec {
     fishPlugins =
         prev.fishPlugins
         // {
-            tide = import ./tide {inherit (prev.fishPlugins) tide;};
+            tide = import ./tide {
+                inherit (prev.fishPlugins) tide;
+                inherit (prev) fetchpatch;
+            };
             zoxide-fish = final.callPackage ./zoxide-fish.nix {};
         };
     nixos-rebuild-ng = import ./nixos-rebuild-ng {inherit (prev) nixos-rebuild-ng;};
