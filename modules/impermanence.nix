@@ -72,7 +72,7 @@
                         unitConfig.DefaultDependencies = false;
                         serviceConfig.Type = "oneshot";
                         script = ''
-                            echo "resetting '${cfg.persistFileSystem}' file system" > /dev/kmsg
+                            echo "resetting root file system" > /dev/kmsg
                             {
                                 ${cfg.resetCommands}
                             } > /dev/kmsg 2>&1 || true
