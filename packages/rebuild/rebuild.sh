@@ -101,10 +101,13 @@ if [[ -z $remote_host ]]; then
     pushd /etc/nixos &> /dev/null || (error "'/etc/nixos' does not exist" && exit 1)
 fi
 
+nixos_core_override=false
 if [[ -d ./nixos-core ]]; then
     extra_args+=(--override-input nixos-core path:./nixos-core)
+    nixos_core_override=true
 elif [[ -d ./core ]]; then
     extra_args+=(--override-input nixos-core path:./core)
+    nixos_core_override=true
 fi
 
 if [[ -n $remote_host ]]; then
@@ -115,7 +118,7 @@ fi
 if $update; then
     info "Updating NixOS configuration ..."
     nix flake update
-else
+elif $nixos_core_override; then
     info "Updating 'nixos-core' flake input ..."
     nix flake update nixos-core 2> /dev/null
 fi
