@@ -115,10 +115,10 @@ if [[ -n $remote_host ]]; then
     config="#${remote_host%%.*}"
 fi
 
-if $update; then
+if [[ $update == true ]]; then
     info "Updating NixOS configuration ..."
     nix flake update
-elif $nixos_core_override; then
+elif [[ $nixos_core_override == true ]]; then
     info "Updating 'nixos-core' flake input ..."
     nix flake update nixos-core 2> /dev/null
 fi
