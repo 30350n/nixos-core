@@ -23,7 +23,7 @@ warning() {
     echo -e "\033[93m$1\033[0m"
 }
 error() {
-    echo -e "\033[91m$1\033[0m"
+    echo -e "\033[1;91m$1\033[0m"
 }
 
 unexpected_error() {
@@ -140,7 +140,11 @@ fi
 
 echo
 info "Building NixOS configuration ..."
-nixos-rebuild $command --flake "path:.${config}" "${extra_args[@]}" --log-format internal-json -v |&
+nixos-rebuild $command \
+    --flake "path:.${config}" \
+    --keep-going \
+    "${extra_args[@]}" \
+    --log-format internal-json -v |&
     tee >(
         awk '
             BEGIN { cmd = "jq --unbuffered --raw-output '\''select(.action == \"msg\").msg'\''" }
