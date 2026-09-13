@@ -7,6 +7,7 @@ Options:
   -d, --dry            Rebuild configuration without activating it.
   -u, --update         Update the flake before rebuilding.
   -r, --remote <host>  Build configuration for remote host.
+  -j, --max-jobs <n>   Maximum number of parallel build jobs.
   -h, --help           Show this message and exit.
 "
 
@@ -42,6 +43,7 @@ command="switch"
 update=false
 config=""
 remote_host=""
+max_jobs="auto"
 extra_args=()
 
 while [[ $OPTIND -le $# ]]; do
@@ -57,6 +59,11 @@ while [[ $OPTIND -le $# ]]; do
                 remote)
                     check_option_value ${!OPTIND-}
                     remote_host=${!OPTIND}
+                    ((OPTIND++))
+                    ;;
+                max-jobs)
+                    check_option_value ${!OPTIND-}
+                    max_jobs=${!OPTIND}
                     ((OPTIND++))
                     ;;
                 help)
@@ -78,6 +85,11 @@ while [[ $OPTIND -le $# ]]; do
                 r)
                     check_option_value ${!OPTIND-}
                     remote_host=${!OPTIND}
+                    ((OPTIND++))
+                    ;;
+                j)
+                    check_option_value ${!OPTIND-}
+                    max_jobs=${!OPTIND}
                     ((OPTIND++))
                     ;;
                 h)
@@ -143,6 +155,7 @@ info "Building NixOS configuration ..."
 nixos-rebuild $command \
     --flake "path:.${config}" \
     --keep-going \
+    --max-jobs "$max_jobs" \
     "${extra_args[@]}" \
     --log-format internal-json -v |&
     tee >(
