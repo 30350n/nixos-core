@@ -1,5 +1,5 @@
 ''
-    set tide_left_prompt_items ssh pwd jj newline character
+    set tide_left_prompt_items ssh vm pwd jj newline character
     set tide_right_prompt_items cmd_duration status direnv docker nix_shell python rustc \
         sub_shell
 
@@ -74,6 +74,9 @@
     set tide_rustc_icon  # nf-seti-rust
     set tide_rustc_color red
     set tide_rustc_bg_color normal
+
+    set tide_vm_icon "󰆧 " # nf-md-cube_outline
+    set tide_vm_color --bold brcyan
 ''
 + ''
     function _tide_item_ssh
@@ -82,6 +85,14 @@
         end
 
         _tide_print_item ssh (set_color $tide_ssh_color)$tide_ssh_icon (hostname) (set_color normal)
+    end
+
+    function _tide_item_vm
+        if not type -q systemd-detect-virt; or not systemd-detect-virt -q
+            return 0
+        end
+
+        _tide_print_item vm (set_color $tide_vm_color)$tide_vm_icon (hostname) (set_color normal)
     end
 ''
 + (let
