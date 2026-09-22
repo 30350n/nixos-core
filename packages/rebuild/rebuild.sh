@@ -8,6 +8,7 @@ Options:
   -u, --update         Update the flake before rebuilding.
   -r, --remote <host>  Build configuration for remote host.
   -j, --max-jobs <n>   Maximum number of parallel build jobs.
+  -c, --cores <n>      Number of CPU cores used for building.
   -h, --help           Show this message and exit.
 "
 
@@ -44,6 +45,7 @@ update=false
 config=""
 remote_host=""
 max_jobs="auto"
+cores="0"
 extra_args=()
 
 while [[ $OPTIND -le $# ]]; do
@@ -64,6 +66,11 @@ while [[ $OPTIND -le $# ]]; do
                 max-jobs)
                     check_option_value ${!OPTIND-}
                     max_jobs=${!OPTIND}
+                    ((OPTIND++))
+                    ;;
+                cores)
+                    check_option_value ${!OPTIND-}
+                    cores=${!OPTIND}
                     ((OPTIND++))
                     ;;
                 help)
@@ -90,6 +97,11 @@ while [[ $OPTIND -le $# ]]; do
                 j)
                     check_option_value ${!OPTIND-}
                     max_jobs=${!OPTIND}
+                    ((OPTIND++))
+                    ;;
+                c)
+                    check_option_value ${!OPTIND-}
+                    cores=${!OPTIND}
                     ((OPTIND++))
                     ;;
                 h)
@@ -156,6 +168,7 @@ nixos-rebuild $command \
     --flake "path:.${config}" \
     --keep-going \
     --max-jobs "$max_jobs" \
+    --cores "$cores" \
     "${extra_args[@]}" \
     --log-format internal-json -v |&
     tee >(
